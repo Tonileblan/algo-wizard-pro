@@ -293,7 +293,7 @@ export function BacktestAnalyzer() {
           <Card className="bg-surface">
             <CardHeader className="flex-row items-center justify-between pb-2">
               <h2 className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                Trade log · {result.trades.length} operaciones
+                Trade log · {result?.trades.length ?? 0} operaciones
               </h2>
               <Badge variant="outline" className="font-mono text-[10px]">
                 trade_log jsonb
@@ -316,7 +316,7 @@ export function BacktestAnalyzer() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {result.trades.map((t) => (
+                    {(result?.trades ?? []).map((t) => (
                       <TableRow key={t.id} className="tabular text-xs">
                         <TableCell className="text-muted-foreground">{t.id}</TableCell>
                         <TableCell>{t.date.slice(0, 16).replace("T", " ")}</TableCell>
@@ -409,10 +409,14 @@ function Metric({
 
 function FrictionPanel({
   friction,
+  running,
   onChange,
+  onRerun,
 }: {
   friction: Friction;
+  running: boolean;
   onChange: (f: Friction) => void;
+  onRerun: () => void;
 }) {
   return (
     <Card className="bg-surface">
@@ -420,7 +424,7 @@ function FrictionPanel({
         <div className="flex items-center gap-2">
           <Sigma className="size-4 text-muted-foreground" />
           <h2 className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-            Panel de fricción · recalcula en tiempo real
+            Panel de fricción · aplica y re-ejecuta
           </h2>
         </div>
       </CardHeader>
