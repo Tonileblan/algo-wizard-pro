@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, BrainCircuit, LayoutDashboard, LineChart, Tag, Wrench } from "lucide-react";
+import { Activity, BrainCircuit, LayoutDashboard, LineChart, LogOut, Tag, Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAppState } from "@/hooks/use-app-state";
 
 const NAV = [
@@ -13,7 +14,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { plan } = useAppState();
+  const { plan, email, isAuthenticated, signOut } = useAppState();
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,9 +44,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               {plan.name}
             </Badge>
-            <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
-              usr_demo_0001
+            <span className="hidden max-w-[180px] truncate font-mono text-xs text-muted-foreground sm:inline">
+              {email ?? "invitado"}
             </span>
+            {isAuthenticated ? (
+              <Button variant="ghost" size="sm" onClick={() => void signOut()} aria-label="Cerrar sesión">
+                <LogOut className="size-4" />
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" asChild>
+                <Link to="/auth">Entrar</Link>
+              </Button>
+            )}
           </div>
         </div>
         <nav className="flex items-center gap-1 overflow-x-auto border-t border-border px-3 py-1.5 md:hidden">

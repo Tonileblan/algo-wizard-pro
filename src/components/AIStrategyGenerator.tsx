@@ -18,13 +18,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useServerFn } from "@tanstack/react-start";
 import { useAppState } from "@/hooks/use-app-state";
+import { generateStrategy } from "@/lib/ai.functions";
 import {
   EXAMPLE_PROMPTS,
   GENERATION_STEPS,
-  mockGenerateStrategy,
   type GeneratedStrategy,
-} from "@/lib/mock-ai";
+} from "@/lib/strategy-types";
 
 const RULE_LABEL: Record<string, string> = {
   entry: "ENTRADA",
@@ -35,7 +36,8 @@ const RULE_LABEL: Record<string, string> = {
 
 export function AIStrategyGenerator() {
   const navigate = useNavigate();
-  const { plan, strategies, aiGenerationsUsed, registerStrategy, setActiveStrategy } = useAppState();
+  const { plan, strategies, aiGenerationsUsed, refresh, setActiveStrategy } = useAppState();
+  const runGeneration = useServerFn(generateStrategy);
   const [prompt, setPrompt] = useState("");
   const [phase, setPhase] = useState<"idle" | "thinking" | "done">("idle");
   const [stepIndex, setStepIndex] = useState(0);
@@ -63,18 +65,21 @@ export function AIStrategyGenerator() {
     setStepIndex(0);
     timers.current.forEach((t) => window.clearTimeout(t));
     timers.current = GENERATION_STEPS.map((_, i) =>
-      window.setTimeout(() => setStepIndex(i), i * 700),
+      window.setTimeout(() => setStepIndex(i), i * 900),
     );
 
-    const [strategy] = await Promise.all([
-      mockGenerateStrategy(prompt, "quantforge-llm-v3 (mock)"),
-      new Promise((r) => setTimeout(r, GENERATION_STEPS.length * 700 + 400)),
-    ]);
-
-    setResult(strategy);
-    registerStrategy(strategy);
-    setActiveStrategy(strategy);
-    setPhase("done");
+    try {
+      const strategy = await runGeneration({ data: { prompt } });
+      setResult(strategy);
+      setActiveStrategy(strategy);
+      setPhase("done");
+      await refresh();
+    } catch (error) {
+      setPhase("idle");
+      toast.error(error instanceof Error ? error.message : "No se pudo generar la estrategia.");
+    } finally {
+      timers.current.forEach((t) => window.clearTimeout(t));
+    }
   }
 
   return (
@@ -86,7 +91,7 @@ export function AIStrategyGenerator() {
               <Sparkles className="mr-1 size-3" /> PROMPT-TO-ALGORITHM
             </Badge>
             <span className="font-mono text-[11px] text-muted-foreground">
-              modelo: quantforge-llm-v3 ·{" "}
+              modelo: gemini-3.7-flash ·{" "}
               {quotaLeft === Infinity ? "generaciones ilimitadas" : `${quotaLeft} generaciones restantes`}
             </span>
           </div>

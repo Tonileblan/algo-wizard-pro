@@ -10,30 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AiStudioRouteImport } from './routes/ai-studio'
-import { Route as BacktestEngineRouteImport } from './routes/backtest-engine'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as StrategyBuilderRouteImport } from './routes/strategy-builder'
+import { Route as AuthenticatedAiStudioRouteImport } from './routes/_authenticated/ai-studio'
+import { Route as AuthenticatedBacktestEngineRouteImport } from './routes/_authenticated/backtest-engine'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedStrategyBuilderRouteImport } from './routes/_authenticated/strategy-builder'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AiStudioRoute = AiStudioRouteImport.update({
-  id: '/ai-studio',
-  path: '/ai-studio',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BacktestEngineRoute = BacktestEngineRouteImport.update({
-  id: '/backtest-engine',
-  path: '/backtest-engine',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -41,71 +37,94 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StrategyBuilderRoute = StrategyBuilderRouteImport.update({
-  id: '/strategy-builder',
-  path: '/strategy-builder',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAiStudioRoute = AuthenticatedAiStudioRouteImport.update({
+  id: '/ai-studio',
+  path: '/ai-studio',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBacktestEngineRoute =
+  AuthenticatedBacktestEngineRouteImport.update({
+    id: '/backtest-engine',
+    path: '/backtest-engine',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStrategyBuilderRoute =
+  AuthenticatedStrategyBuilderRouteImport.update({
+    id: '/strategy-builder',
+    path: '/strategy-builder',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ai-studio': typeof AiStudioRoute
-  '/backtest-engine': typeof BacktestEngineRoute
-  '/dashboard': typeof DashboardRoute
+  '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/strategy-builder': typeof StrategyBuilderRoute
+  '/ai-studio': typeof AuthenticatedAiStudioRoute
+  '/backtest-engine': typeof AuthenticatedBacktestEngineRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/strategy-builder': typeof AuthenticatedStrategyBuilderRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/ai-studio': typeof AiStudioRoute
-  '/backtest-engine': typeof BacktestEngineRoute
-  '/dashboard': typeof DashboardRoute
+  '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/strategy-builder': typeof StrategyBuilderRoute
+  '/ai-studio': typeof AuthenticatedAiStudioRoute
+  '/backtest-engine': typeof AuthenticatedBacktestEngineRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/strategy-builder': typeof AuthenticatedStrategyBuilderRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/ai-studio': typeof AiStudioRoute
-  '/backtest-engine': typeof BacktestEngineRoute
-  '/dashboard': typeof DashboardRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
-  '/strategy-builder': typeof StrategyBuilderRoute
+  '/_authenticated/ai-studio': typeof AuthenticatedAiStudioRoute
+  '/_authenticated/backtest-engine': typeof AuthenticatedBacktestEngineRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/strategy-builder': typeof AuthenticatedStrategyBuilderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/pricing'
     | '/ai-studio'
     | '/backtest-engine'
     | '/dashboard'
-    | '/pricing'
     | '/strategy-builder'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/pricing'
     | '/ai-studio'
     | '/backtest-engine'
     | '/dashboard'
-    | '/pricing'
     | '/strategy-builder'
   id:
     | '__root__'
     | '/'
-    | '/ai-studio'
-    | '/backtest-engine'
-    | '/dashboard'
+    | '/_authenticated'
+    | '/auth'
     | '/pricing'
-    | '/strategy-builder'
+    | '/_authenticated/ai-studio'
+    | '/_authenticated/backtest-engine'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/strategy-builder'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AiStudioRoute: typeof AiStudioRoute
-  BacktestEngineRoute: typeof BacktestEngineRoute
-  DashboardRoute: typeof DashboardRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
-  StrategyBuilderRoute: typeof StrategyBuilderRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -117,25 +136,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ai-studio': {
-      id: '/ai-studio'
-      path: '/ai-studio'
-      fullPath: '/ai-studio'
-      preLoaderRoute: typeof AiStudioRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/backtest-engine': {
-      id: '/backtest-engine'
-      path: '/backtest-engine'
-      fullPath: '/backtest-engine'
-      preLoaderRoute: typeof BacktestEngineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -145,23 +157,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/strategy-builder': {
-      id: '/strategy-builder'
+    '/_authenticated/ai-studio': {
+      id: '/_authenticated/ai-studio'
+      path: '/ai-studio'
+      fullPath: '/ai-studio'
+      preLoaderRoute: typeof AuthenticatedAiStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/backtest-engine': {
+      id: '/_authenticated/backtest-engine'
+      path: '/backtest-engine'
+      fullPath: '/backtest-engine'
+      preLoaderRoute: typeof AuthenticatedBacktestEngineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/strategy-builder': {
+      id: '/_authenticated/strategy-builder'
       path: '/strategy-builder'
       fullPath: '/strategy-builder'
-      preLoaderRoute: typeof StrategyBuilderRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedStrategyBuilderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAiStudioRoute: typeof AuthenticatedAiStudioRoute
+  AuthenticatedBacktestEngineRoute: typeof AuthenticatedBacktestEngineRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedStrategyBuilderRoute: typeof AuthenticatedStrategyBuilderRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAiStudioRoute: AuthenticatedAiStudioRoute,
+  AuthenticatedBacktestEngineRoute: AuthenticatedBacktestEngineRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedStrategyBuilderRoute: AuthenticatedStrategyBuilderRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AiStudioRoute: AiStudioRoute,
-  BacktestEngineRoute: BacktestEngineRoute,
-  DashboardRoute: DashboardRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
-  StrategyBuilderRoute: StrategyBuilderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

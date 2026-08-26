@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+
 import { Check, Loader2, Minus, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,13 +52,24 @@ const FAQ = [
 ];
 
 export function PricingView() {
-  const { subscription, setPlanTier } = useAppState();
+  const navigate = useNavigate();
+  const { subscription, setPlanTier, isAuthenticated } = useAppState();
   const [loadingTier, setLoadingTier] = useState<PlanTier | null>(null);
 
   async function subscribe(tier: PlanTier) {
+    if (!isAuthenticated) {
+      navigate({ to: "/auth", search: { redirect: "/pricing" } });
+      return;
+    }
     setLoadingTier(tier);
     const session = await mockStripeCheckout(tier);
-    setPlanTier(tier);
+    try {
+      await setPlanTier(tier);
+    } catch (error) {
+      setLoadingTier(null);
+      toast.error(error instanceof Error ? error.message : "No se pudo activar el plan.");
+      return;
+    }
     setLoadingTier(null);
     toast.success(`Suscripción ${tier.toUpperCase()} activada`, {
       description: `Sesión de Stripe simulada: ${session.sessionId}`,

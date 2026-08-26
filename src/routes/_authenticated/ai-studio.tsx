@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { AIStrategyGenerator } from "@/components/AIStrategyGenerator";
 import { PlanGate } from "@/components/PlanGate";
 
-export const Route = createFileRoute("/ai-studio")({
+export const Route = createFileRoute("/_authenticated/ai-studio")({
   head: () => ({
     meta: [
       { title: "AI Strategy Studio — QuantForge" },

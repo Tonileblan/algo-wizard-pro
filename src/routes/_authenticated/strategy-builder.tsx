@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { StrategyWizard } from "@/components/StrategyWizard";
 
-export const Route = createFileRoute("/strategy-builder")({
+export const Route = createFileRoute("/_authenticated/strategy-builder")({
   head: () => ({
     meta: [
       { title: "Strategy Builder — wizard de 9 pasos | QuantForge" },

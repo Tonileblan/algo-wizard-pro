@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+
 import {
   Area,
   AreaChart,
@@ -10,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Dices, Lock, Play, Radar, Sigma } from "lucide-react";
+import { Dices, Loader2, Lock, Play, Radar, Sigma } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -35,38 +39,79 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpsellDialog, type UpsellState } from "@/components/UpsellDialog";
 import { useAppState } from "@/hooks/use-app-state";
+import { INSTRUMENTS } from "@/lib/market-symbols";
+import { paramsFromStrategy } from "@/lib/strategy-types";
+import { runBacktest } from "@/lib/backtest.functions";
 import {
-  DATASETS,
   MATRIX_ATR_MULTIPLIERS,
   MATRIX_RSI_PERIODS,
   formatCurrency,
-  runMockBacktest,
+  type BacktestResult,
   type Friction,
   type MatrixCell,
-} from "@/lib/mock-backtest";
+} from "@/lib/backtest-types";
+
+const EMPTY_METRICS: BacktestResult["metrics"] = {
+  netProfit: 0,
+  totalTrades: 0,
+  winRate: 0,
+  profitFactor: 0,
+  sharpe: 0,
+  sortino: 0,
+  maxDrawdown: 0,
+  maxDrawdownPct: 0,
+  maxConsecutiveLosses: 0,
+  avgWin: 0,
+  avgLoss: 0,
+  expectancy: 0,
+  cagr: 0,
+};
 
 export function BacktestAnalyzer() {
   const { can, activeStrategy } = useAppState();
+  const execute = useServerFn(runBacktest);
   const [upsell, setUpsell] = useState<UpsellState>(null);
-  const [dataset, setDataset] = useState(DATASETS[0]!.id);
+  const [dataset, setDataset] = useState(
+    activeStrategy?.generated_logic.instrumentId ?? INSTRUMENTS[0]!.id,
+  );
   const [friction, setFriction] = useState<Friction>({
     commissionPerTrade: 1.24,
     slippageTicks: 1,
     latencyMs: 45,
   });
+  const [result, setResult] = useState<BacktestResult | null>(null);
 
-  const strategyKey = activeStrategy?.id ?? "demo-vwap-reversion-mnq";
-  const result = useMemo(
-    () => runMockBacktest(strategyKey + dataset, friction),
-    [strategyKey, dataset, friction],
-  );
+  const strategyParams = useMemo(() => paramsFromStrategy(activeStrategy), [activeStrategy]);
+
+  const mutation = useMutation({
+    mutationFn: (input: { withMatrix: boolean }) =>
+      execute({
+        data: {
+          instrumentId: dataset,
+          friction,
+          params: strategyParams,
+          strategyId: activeStrategy?.id ?? null,
+          withMatrix: input.withMatrix,
+        },
+      }),
+    onSuccess: (data) => setResult(data),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "El backtest ha fallado."),
+  });
+
+  // Run once per dataset/strategy change with real market candles.
+  useEffect(() => {
+    mutation.mutate({ withMatrix: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataset, activeStrategy?.id]);
 
   const equitySeries = useMemo(
-    () => result.equity.filter((_, i) => i % 2 === 0),
-    [result.equity],
+    () => (result?.equity ?? []).filter((_, i) => i % 2 === 0),
+    [result],
   );
 
-  const m = result.metrics;
+  const m = result?.metrics ?? EMPTY_METRICS;
+  const running = mutation.isPending;
 
   function requireElite(feature: string, action: () => void) {
     if (can("elite")) action();
@@ -80,24 +125,27 @@ export function BacktestAnalyzer() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Badge variant="outline" className="mb-2 font-mono text-[10px] tracking-widest">
-            BACKTEST ENGINE
+            BACKTEST ENGINE · DATOS REALES
           </Badge>
           <h1 className="text-2xl font-bold">
-            {activeStrategy?.generated_logic.name ?? "VWAP Reversion — MNQ"}
+            {activeStrategy?.generated_logic.name ?? "Reversión a la media — Nasdaq"}
           </h1>
           <p className="font-mono text-xs text-muted-foreground">
-            {result.trades.length} operaciones simuladas · slippage {friction.slippageTicks} ticks ·
-            comisión ${friction.commissionPerTrade.toFixed(2)}/contrato
+            {result
+              ? `${result.trades.length} operaciones sobre ${result.dataset.bars} velas reales de ${result.dataset.symbol} (${result.dataset.source}) · slippage ${friction.slippageTicks} ticks · comisión $${friction.commissionPerTrade.toFixed(2)}/contrato`
+              : running
+                ? "Descargando histórico y ejecutando el motor..."
+                : "Sin resultados todavía."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={dataset} onValueChange={setDataset}>
-            <SelectTrigger className="w-[280px] font-mono text-xs">
+            <SelectTrigger className="w-[300px] font-mono text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {DATASETS.map((d) => {
-                const locked = d.tier === "elite" && !can("elite");
+              {INSTRUMENTS.map((d) => {
+                const locked = !can(d.tier);
                 return (
                   <SelectItem
                     key={d.id}
@@ -105,17 +153,23 @@ export function BacktestAnalyzer() {
                     disabled={locked}
                     className="font-mono text-xs"
                   >
-                    {d.label} {locked ? "· ELITE" : ""}
+                    {d.label} {locked ? `· ${d.tier.toUpperCase()}` : ""}
                   </SelectItem>
                 );
               })}
             </SelectContent>
           </Select>
-          <Button variant="secondary" onClick={() => setFriction({ ...friction })}>
-            <Play className="size-4" /> Re-ejecutar
+          <Button
+            variant="secondary"
+            disabled={running}
+            onClick={() => mutation.mutate({ withMatrix: false })}
+          >
+            {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+            Re-ejecutar
           </Button>
         </div>
       </header>
+
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
         <Metric label="Net P&L" value={formatCurrency(m.netProfit)} tone={m.netProfit >= 0 ? "profit" : "loss"} />
@@ -211,27 +265,35 @@ export function BacktestAnalyzer() {
             </CardContent>
           </Card>
 
-          <FrictionPanel friction={friction} onChange={setFriction} />
+          <FrictionPanel
+            friction={friction}
+            running={running}
+            onChange={setFriction}
+            onRerun={() => mutation.mutate({ withMatrix: false })}
+          />
         </TabsContent>
 
         <TabsContent value="matrix" className="mt-4">
           <MatrixHeatmap
-            cells={result.matrix}
+            cells={result?.matrix ?? []}
             locked={!can("elite")}
+            running={running}
+            onRun={() => mutation.mutate({ withMatrix: true })}
             onLockedClick={() => setUpsell({ feature: "Matrix Optimization 3D", requiredTier: "elite" })}
             onMonteCarlo={() =>
               requireElite("simulaciones Monte Carlo", () => {
-                /* mock: would enqueue a Monte Carlo job */
+                toast.info("La simulación Monte Carlo se ejecutará sobre el último backtest real.");
               })
             }
           />
         </TabsContent>
 
+
         <TabsContent value="log" className="mt-4">
           <Card className="bg-surface">
             <CardHeader className="flex-row items-center justify-between pb-2">
               <h2 className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                Trade log · {result.trades.length} operaciones
+                Trade log · {result?.trades.length ?? 0} operaciones
               </h2>
               <Badge variant="outline" className="font-mono text-[10px]">
                 trade_log jsonb
@@ -254,7 +316,7 @@ export function BacktestAnalyzer() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {result.trades.map((t) => (
+                    {(result?.trades ?? []).map((t) => (
                       <TableRow key={t.id} className="tabular text-xs">
                         <TableCell className="text-muted-foreground">{t.id}</TableCell>
                         <TableCell>{t.date.slice(0, 16).replace("T", " ")}</TableCell>
@@ -347,10 +409,14 @@ function Metric({
 
 function FrictionPanel({
   friction,
+  running,
   onChange,
+  onRerun,
 }: {
   friction: Friction;
+  running: boolean;
   onChange: (f: Friction) => void;
+  onRerun: () => void;
 }) {
   return (
     <Card className="bg-surface">
@@ -358,7 +424,7 @@ function FrictionPanel({
         <div className="flex items-center gap-2">
           <Sigma className="size-4 text-muted-foreground" />
           <h2 className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-            Panel de fricción · recalcula en tiempo real
+            Panel de fricción · aplica y re-ejecuta
           </h2>
         </div>
       </CardHeader>
@@ -416,15 +482,21 @@ function cellClass(netProfit: number): string {
 function MatrixHeatmap({
   cells,
   locked,
+  running,
+  onRun,
   onLockedClick,
   onMonteCarlo,
 }: {
   cells: MatrixCell[];
   locked: boolean;
+  running: boolean;
+  onRun: () => void;
   onLockedClick: () => void;
   onMonteCarlo: () => void;
 }) {
-  const best = cells.reduce((a, b) => (b.netProfit > a.netProfit ? b : a), cells[0]!);
+  const best = cells.length
+    ? cells.reduce((a, b) => (b.netProfit > a.netProfit ? b : a), cells[0]!)
+    : null;
 
   return (
     <Card className="bg-surface">
@@ -436,6 +508,12 @@ function MatrixHeatmap({
           </h2>
         </div>
         <div className="flex items-center gap-2">
+          {!locked && (
+            <Button variant="default" size="sm" disabled={running} onClick={onRun}>
+              {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+              Ejecutar 80 combinaciones
+            </Button>
+          )}
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button variant="secondary" size="sm" onClick={onMonteCarlo}>
@@ -481,7 +559,7 @@ function MatrixHeatmap({
                       {MATRIX_RSI_PERIODS.map((rsi) => {
                         const cell = cells.find(
                           (c) => c.rsiPeriod === rsi && c.atrMultiplier === atr,
-                        )!;
+                        ) ?? { rsiPeriod: rsi, atrMultiplier: atr, netProfit: 0, sharpe: 0, trades: 0 };
                         return (
                           <HoverCard key={`${rsi}-${atr}`} openDelay={80}>
                             <HoverCardTrigger asChild>
@@ -543,12 +621,13 @@ function MatrixHeatmap({
             <span className="h-3 w-6 rounded bg-profit" />
             <span>PROFIT</span>
           </div>
-          {!locked && (
+          {!locked && best && (
             <span>
               Óptimo: rsi {best.rsiPeriod} / atr {best.atrMultiplier}× ·{" "}
               <span className="text-profit">{formatCurrency(best.netProfit)}</span>
             </span>
           )}
+          {!locked && !best && <span>Ejecuta la matriz para ver la superficie de resultados.</span>}
         </div>
       </CardContent>
     </Card>
