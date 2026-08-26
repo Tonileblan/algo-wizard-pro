@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { BacktestAnalyzer } from "@/components/BacktestAnalyzer";
 import { PlanGate } from "@/components/PlanGate";
 
-export const Route = createFileRoute("/backtest-engine")({
+export const Route = createFileRoute("/_authenticated/backtest-engine")({
   head: () => ({
     meta: [
       { title: "Backtest Engine — QuantForge" },
