@@ -115,28 +115,28 @@ export function StrategyWizard() {
     setExportTarget({
       type: "custom",
       options: {
-        strategyName: values.name || "WizardStrategy",
-        instrument: `${values.instrument || "MNQ"} (${values.timeframe || "5 min"})`,
-        timeframe: values.timeframe || "5 min",
-        style: values.primary?.includes("VWAP") ? "Mean Reversion" : "Breakout / Momentum",
-        thesis: values.thesis || "Estrategia configurada paso a paso mediante el Wizard de 9 pasos de Quantitrading.",
+        strategyName: values['name'] || "WizardStrategy",
+        instrument: `${values['instrument'] || "MNQ"} (${values['timeframe'] || "5 min"})`,
+        timeframe: values['timeframe'] || "5 min",
+        style: values['primary']?.includes("VWAP") ? "Mean Reversion" : "Breakout / Momentum",
+        thesis: values['thesis'] || "Estrategia configurada paso a paso mediante el Wizard de 9 pasos de Quantitrading.",
         rules: [
-          ...(values.entry ? [{ kind: "entry", text: values.entry }] : []),
-          ...(values.takeProfit ? [{ kind: "exit", text: `Take Profit objetivo: ${values.takeProfit} ticks` }] : []),
-          ...(values.stopLoss ? [{ kind: "risk", text: `Stop Loss obligatorio: ${values.stopLoss} ticks` }] : []),
+          ...(values['entry'] ? [{ kind: "entry", text: values['entry'] }] : []),
+          ...(values['takeProfit'] ? [{ kind: "exit", text: `Take Profit objetivo: ${values['takeProfit']} ticks` }] : []),
+          ...(values['stopLoss'] ? [{ kind: "risk", text: `Stop Loss obligatorio: ${values['stopLoss']} ticks` }] : []),
         ],
-        contracts: Number(values.contracts) || 1,
-        stopTicks: Number(values.stopLoss) || 20,
-        takeTicks: Number(values.takeProfit) || 40,
+        contracts: Number(values['contracts']) || 1,
+        stopTicks: Number(values['stopLoss']) || 20,
+        takeTicks: Number(values['takeProfit']) || 40,
         rsiPeriod: 14,
-        atrMultiplier: Number(values.volFilter) || 1.5,
+        atrMultiplier: Number(values['volFilter']) || 1.5,
       },
     });
   }
 
   function next() {
     if (step === STEPS.length - 1) {
-      if (values.target === "NinjaTrader 8" || !values.target) {
+      if (values['target'] === "NinjaTrader 8" || !values['target']) {
         openExport();
       }
       toast.success("Estrategia guardada y configurada", {
@@ -234,13 +234,13 @@ export function StrategyWizard() {
                 </div>
               ))}
 
-              {step === STEPS.length - 1 && (values.target === "NinjaTrader 8" || !values.target) && (
+              {step === STEPS.length - 1 && (values['target'] === "NinjaTrader 8" || !values['target']) && (
                 <div className="mt-6 rounded-lg border border-primary/40 bg-primary/5 p-4">
                   <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
                     <FileCode className="size-4 text-primary" /> Generador NinjaScript 8 (C#)
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Tu código C# se compilará con tus parámetros (Stop: {values.stopLoss ?? 20} ticks, Target: {values.takeProfit ?? 40} ticks, Contratos: {values.contracts ?? 1}).
+                    Tu código C# se compilará con tus parámetros (Stop: {values['stopLoss'] ?? 20} ticks, Target: {values['takeProfit'] ?? 40} ticks, Contratos: {values['contracts'] ?? 1}).
                   </p>
                   <Button
                     type="button"
