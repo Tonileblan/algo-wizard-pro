@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Dices, Lock, Play, Radar, Sigma } from "lucide-react";
+import { Dices, Loader2, Lock, Play, Radar, Sigma } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
