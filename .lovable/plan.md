@@ -6,7 +6,7 @@ El plan sustituye esas dos piezas por servicios reales, manteniendo la misma UI.
 
 ## 1. Backend (Lovable Cloud)
 
-Se activa Lovable Cloud para tener base de datos, autenticación y secretos. Tablas:
+Se activa Supabase para tener base de datos, autenticación y secretos. Tablas:
 
 - `profiles` + `user_roles` — usuarios y roles.
 - `subscriptions` — `plan_tier` (free/pro/elite), estado, periodo. Los guards de plan pasan a leer de aquí en lugar de `localStorage`.
