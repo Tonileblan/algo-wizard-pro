@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useAppState } from "@/hooks/use-app-state";
+import { LiveMarketPanel } from "@/components/LiveMarketPanel";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -36,7 +37,7 @@ function mockCustomerPortal(): Promise<string> {
 }
 
 function Dashboard() {
-  const { subscription, plan, strategies, aiGenerationsUsed } = useAppState();
+  const { subscription, plan, strategies, aiGenerationsUsed, email } = useAppState();
 
   const aiLimit = plan.aiGenerationsPerMonth;
   const aiPct = aiLimit === "unlimited" ? 12 : Math.min(100, (aiGenerationsUsed / Math.max(aiLimit, 1)) * 100);
@@ -54,7 +55,7 @@ function Dashboard() {
             </Badge>
             <h1 className="text-2xl font-bold">Resumen de cuenta</h1>
             <p className="font-mono text-xs text-muted-foreground">
-              {subscription.user_id} · {subscription.stripe_customer_id}
+              {email ?? "cuenta"} · {subscription.stripe_customer_id ?? "sin cliente Stripe"}
             </p>
           </div>
           <div className="flex gap-2">
@@ -74,6 +75,8 @@ function Dashboard() {
             </Button>
           </div>
         </header>
+
+        <LiveMarketPanel />
 
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="bg-surface lg:col-span-1">
@@ -154,7 +157,7 @@ function Dashboard() {
                   <div key={s.id} className="flex flex-wrap items-center gap-3 py-3">
                     <span className="text-sm font-semibold">{s.generated_logic.name}</span>
                     <Badge variant="outline" className="font-mono text-[10px]">
-                      {s.generated_logic.instrument.split(" — ")[0]}
+                      {s.generated_logic.instrument.split(" ·")[0]}
                     </Badge>
                     <Badge variant="secondary" className="font-mono text-[10px]">
                       {s.generated_logic.timeframe}
