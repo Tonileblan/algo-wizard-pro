@@ -67,7 +67,7 @@ export const runBacktest = createServerFn({ method: "POST" })
         .from("advanced_backtests")
         .insert({
           user_id: context.userId,
-          strategy_id: data.strategyId,
+          strategy_id: data.strategyId ?? null,
           symbol: instrument.symbol,
           interval: instrument.interval,
           parameters: params as unknown as Json,

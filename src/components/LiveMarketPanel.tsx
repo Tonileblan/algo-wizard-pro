@@ -35,7 +35,7 @@ export function LiveMarketPanel() {
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
             {WATCHLIST.map((item) => {
               const quote = data?.find((q) => q.symbol === item.symbol);
-              const change = quote?.changePercent ?? 0;
+              const change = quote?.changePct ?? 0;
               return (
                 <div key={item.symbol} className="panel px-3 py-2.5">
                   <p className="truncate font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
