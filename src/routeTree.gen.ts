@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiStudioRouteImport } from './routes/ai-studio'
 import { Route as BacktestEngineRouteImport } from './routes/backtest-engine'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as StrategyBuilderRouteImport } from './routes/strategy-builder'
 
@@ -30,6 +31,11 @@ const BacktestEngineRoute = BacktestEngineRouteImport.update({
   path: '/backtest-engine',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-studio': typeof AiStudioRoute
   '/backtest-engine': typeof BacktestEngineRoute
+  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-studio': typeof AiStudioRoute
   '/backtest-engine': typeof BacktestEngineRoute
+  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
@@ -60,20 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ai-studio': typeof AiStudioRoute
   '/backtest-engine': typeof BacktestEngineRoute
+  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/ai-studio' | '/backtest-engine' | '/pricing' | '/strategy-builder'
+    | '/'
+    | '/ai-studio'
+    | '/backtest-engine'
+    | '/dashboard'
+    | '/pricing'
+    | '/strategy-builder'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai-studio' | '/backtest-engine' | '/pricing' | '/strategy-builder'
+  to:
+    | '/'
+    | '/ai-studio'
+    | '/backtest-engine'
+    | '/dashboard'
+    | '/pricing'
+    | '/strategy-builder'
   id:
     | '__root__'
     | '/'
     | '/ai-studio'
     | '/backtest-engine'
+    | '/dashboard'
     | '/pricing'
     | '/strategy-builder'
   fileRoutesById: FileRoutesById
@@ -82,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiStudioRoute: typeof AiStudioRoute
   BacktestEngineRoute: typeof BacktestEngineRoute
+  DashboardRoute: typeof DashboardRoute
   PricingRoute: typeof PricingRoute
   StrategyBuilderRoute: typeof StrategyBuilderRoute
 }
@@ -109,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BacktestEngineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -130,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiStudioRoute: AiStudioRoute,
   BacktestEngineRoute: BacktestEngineRoute,
+  DashboardRoute: DashboardRoute,
   PricingRoute: PricingRoute,
   StrategyBuilderRoute: StrategyBuilderRoute,
 }
