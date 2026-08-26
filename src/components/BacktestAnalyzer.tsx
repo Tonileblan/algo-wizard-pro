@@ -39,7 +39,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpsellDialog, type UpsellState } from "@/components/UpsellDialog";
 import { useAppState } from "@/hooks/use-app-state";
-import { INSTRUMENTS, getInstrument } from "@/lib/market-symbols";
+import { INSTRUMENTS } from "@/lib/market-symbols";
 import { paramsFromStrategy } from "@/lib/strategy-types";
 import { runBacktest } from "@/lib/backtest.functions";
 import {
