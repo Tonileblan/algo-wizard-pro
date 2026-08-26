@@ -14,16 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      advanced_backtests: {
+        Row: {
+          created_at: string
+          equity_curve: Json
+          friction: Json
+          id: string
+          interval: string
+          metrics: Json
+          parameters: Json
+          strategy_id: string | null
+          symbol: string
+          trade_log: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          equity_curve?: Json
+          friction?: Json
+          id?: string
+          interval: string
+          metrics?: Json
+          parameters?: Json
+          strategy_id?: string | null
+          symbol: string
+          trade_log?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          equity_curve?: Json
+          friction?: Json
+          id?: string
+          interval?: string
+          metrics?: Json
+          parameters?: Json
+          strategy_id?: string | null
+          symbol?: string
+          trade_log?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advanced_backtests_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "ai_generated_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_generated_strategies: {
+        Row: {
+          ai_model_used: string
+          created_at: string
+          generated_logic: Json
+          id: string
+          prompt_original: string
+          user_id: string
+        }
+        Insert: {
+          ai_model_used: string
+          created_at?: string
+          generated_logic: Json
+          id?: string
+          prompt_original: string
+          user_id: string
+        }
+        Update: {
+          ai_model_used?: string
+          created_at?: string
+          generated_logic?: Json
+          id?: string
+          prompt_original?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      market_candles: {
+        Row: {
+          close: number
+          fetched_at: string
+          high: number
+          interval: string
+          low: number
+          open: number
+          source: string
+          symbol: string
+          ts: string
+          volume: number
+        }
+        Insert: {
+          close: number
+          fetched_at?: string
+          high: number
+          interval: string
+          low: number
+          open: number
+          source?: string
+          symbol: string
+          ts: string
+          volume?: number
+        }
+        Update: {
+          close?: number
+          fetched_at?: string
+          high?: number
+          interval?: string
+          low?: number
+          open?: number
+          source?: string
+          symbol?: string
+          ts?: string
+          volume?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          ai_generations_used: number
+          created_at: string
+          current_period_end: string
+          id: string
+          plan_tier: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          id?: string
+          plan_tier?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_generations_used?: number
+          created_at?: string
+          current_period_end?: string
+          id?: string
+          plan_tier?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +355,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
