@@ -265,21 +265,29 @@ export function BacktestAnalyzer() {
             </CardContent>
           </Card>
 
-          <FrictionPanel friction={friction} onChange={setFriction} />
+          <FrictionPanel
+            friction={friction}
+            running={running}
+            onChange={setFriction}
+            onRerun={() => mutation.mutate({ withMatrix: false })}
+          />
         </TabsContent>
 
         <TabsContent value="matrix" className="mt-4">
           <MatrixHeatmap
-            cells={result.matrix}
+            cells={result?.matrix ?? []}
             locked={!can("elite")}
+            running={running}
+            onRun={() => mutation.mutate({ withMatrix: true })}
             onLockedClick={() => setUpsell({ feature: "Matrix Optimization 3D", requiredTier: "elite" })}
             onMonteCarlo={() =>
               requireElite("simulaciones Monte Carlo", () => {
-                /* mock: would enqueue a Monte Carlo job */
+                toast.info("La simulación Monte Carlo se ejecutará sobre el último backtest real.");
               })
             }
           />
         </TabsContent>
+
 
         <TabsContent value="log" className="mt-4">
           <Card className="bg-surface">
