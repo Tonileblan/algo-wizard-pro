@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Json } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getInstrument } from "./market-symbols";
 import { DEFAULT_PARAMS, type BacktestResult, type Friction, type StrategyParams } from "./backtest-types";
@@ -69,11 +70,11 @@ export const runBacktest = createServerFn({ method: "POST" })
           strategy_id: data.strategyId,
           symbol: instrument.symbol,
           interval: instrument.interval,
-          parameters: params as unknown as Record<string, unknown>,
-          friction: data.friction as unknown as Record<string, unknown>,
-          metrics: run.metrics as unknown as Record<string, unknown>,
-          equity_curve: run.equity as unknown as Record<string, unknown>[],
-          trade_log: run.trades.slice(0, 1000) as unknown as Record<string, unknown>[],
+          parameters: params as unknown as Json,
+          friction: data.friction as unknown as Json,
+          metrics: run.metrics as unknown as Json,
+          equity_curve: run.equity as unknown as Json,
+          trade_log: run.trades.slice(0, 1000) as unknown as Json,
         })
         .select("id")
         .maybeSingle();

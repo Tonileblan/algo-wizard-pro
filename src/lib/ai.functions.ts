@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Json } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { INSTRUMENTS } from "./market-symbols";
 import { getPlan, type PlanTier } from "./plans";
@@ -174,7 +175,7 @@ export const generateStrategy = createServerFn({ method: "POST" })
         user_id: context.userId,
         prompt_original: data.prompt,
         ai_model_used: MODEL,
-        generated_logic: logic as unknown as Record<string, unknown>,
+        generated_logic: logic as unknown as Json,
       })
       .select("id, created_at")
       .maybeSingle();

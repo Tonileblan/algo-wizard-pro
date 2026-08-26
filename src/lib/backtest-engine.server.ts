@@ -153,7 +153,7 @@ export function runBacktestOnCandles(
     const dev = std[i];
     const fast = emaFast[i];
     const slow = emaSlow[i];
-    if (r === null || a === null || a === undefined || mean === null || dev === null) continue;
+    if (r === null || r === undefined || a === null || a === undefined || mean === null || dev === null) continue;
 
     let side: "LONG" | "SHORT" | null = null;
 
