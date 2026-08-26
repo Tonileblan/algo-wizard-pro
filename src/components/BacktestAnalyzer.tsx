@@ -482,15 +482,21 @@ function cellClass(netProfit: number): string {
 function MatrixHeatmap({
   cells,
   locked,
+  running,
+  onRun,
   onLockedClick,
   onMonteCarlo,
 }: {
   cells: MatrixCell[];
   locked: boolean;
+  running: boolean;
+  onRun: () => void;
   onLockedClick: () => void;
   onMonteCarlo: () => void;
 }) {
-  const best = cells.reduce((a, b) => (b.netProfit > a.netProfit ? b : a), cells[0]!);
+  const best = cells.length
+    ? cells.reduce((a, b) => (b.netProfit > a.netProfit ? b : a), cells[0]!)
+    : null;
 
   return (
     <Card className="bg-surface">
@@ -502,6 +508,12 @@ function MatrixHeatmap({
           </h2>
         </div>
         <div className="flex items-center gap-2">
+          {!locked && (
+            <Button variant="default" size="sm" disabled={running} onClick={onRun}>
+              {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+              Ejecutar 80 combinaciones
+            </Button>
+          )}
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button variant="secondary" size="sm" onClick={onMonteCarlo}>
@@ -547,7 +559,7 @@ function MatrixHeatmap({
                       {MATRIX_RSI_PERIODS.map((rsi) => {
                         const cell = cells.find(
                           (c) => c.rsiPeriod === rsi && c.atrMultiplier === atr,
-                        )!;
+                        ) ?? { rsiPeriod: rsi, atrMultiplier: atr, netProfit: 0, sharpe: 0, trades: 0 };
                         return (
                           <HoverCard key={`${rsi}-${atr}`} openDelay={80}>
                             <HoverCardTrigger asChild>
@@ -609,12 +621,13 @@ function MatrixHeatmap({
             <span className="h-3 w-6 rounded bg-profit" />
             <span>PROFIT</span>
           </div>
-          {!locked && (
+          {!locked && best && (
             <span>
               Óptimo: rsi {best.rsiPeriod} / atr {best.atrMultiplier}× ·{" "}
               <span className="text-profit">{formatCurrency(best.netProfit)}</span>
             </span>
           )}
+          {!locked && !best && <span>Ejecuta la matriz para ver la superficie de resultados.</span>}
         </div>
       </CardContent>
     </Card>
