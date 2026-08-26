@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Download, FileCode, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,10 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpsellDialog, type UpsellState } from "@/components/UpsellDialog";
+import {
+  NinjaTraderExportDialog,
+  type NinjaTraderExportTarget,
+} from "@/components/NinjaTraderExportDialog";
 import { useAppState } from "@/hooks/use-app-state";
 
 type Field =
@@ -92,16 +96,51 @@ const STEPS: Array<{ title: string; hint: string; fields: Field[]; proOnly?: boo
 export function StrategyWizard() {
   const { can } = useAppState();
   const [step, setStep] = useState(0);
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>({
+    name: "Strategy_Custom_NQ",
+    instrument: "MNQ",
+    timeframe: "5 min",
+    target: "NinjaTrader 8",
+    stopLoss: "20",
+    takeProfit: "40",
+    contracts: "1",
+  });
   const [upsell, setUpsell] = useState<UpsellState>(null);
+  const [exportTarget, setExportTarget] = useState<NinjaTraderExportTarget>(null);
 
   const current = STEPS[step]!;
   const locked = current.proOnly === true && !can("pro");
 
+  function openExport() {
+    setExportTarget({
+      type: "custom",
+      options: {
+        strategyName: values.name || "WizardStrategy",
+        instrument: `${values.instrument || "MNQ"} (${values.timeframe || "5 min"})`,
+        timeframe: values.timeframe || "5 min",
+        style: values.primary?.includes("VWAP") ? "Mean Reversion" : "Breakout / Momentum",
+        thesis: values.thesis || "Estrategia configurada paso a paso mediante el Wizard de 9 pasos de Quantitrading.",
+        rules: [
+          ...(values.entry ? [{ kind: "entry", text: values.entry }] : []),
+          ...(values.takeProfit ? [{ kind: "exit", text: `Take Profit objetivo: ${values.takeProfit} ticks` }] : []),
+          ...(values.stopLoss ? [{ kind: "risk", text: `Stop Loss obligatorio: ${values.stopLoss} ticks` }] : []),
+        ],
+        contracts: Number(values.contracts) || 1,
+        stopTicks: Number(values.stopLoss) || 20,
+        takeTicks: Number(values.takeProfit) || 40,
+        rsiPeriod: 14,
+        atrMultiplier: Number(values.volFilter) || 1.5,
+      },
+    });
+  }
+
   function next() {
     if (step === STEPS.length - 1) {
-      toast.success("Estrategia guardada", {
-        description: "Lista para backtest en el motor de análisis.",
+      if (values.target === "NinjaTrader 8" || !values.target) {
+        openExport();
+      }
+      toast.success("Estrategia guardada y configurada", {
+        description: "Lista para backtest o exportación a NinjaTrader 8.",
       });
       return;
     }
@@ -156,46 +195,69 @@ export function StrategyWizard() {
               </Button>
             </div>
           ) : (
-            current.fields.map((field) => (
-              <div key={field.key} className="space-y-2">
-                <Label className="font-mono text-xs">{field.label}</Label>
-                {field.type === "textarea" ? (
-                  <Textarea
-                    rows={4}
-                    value={values[field.key] ?? ""}
-                    placeholder={field.placeholder}
-                    onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-                  />
-                ) : field.type === "select" ? (
-                  <Select
-                    value={values[field.key] ?? ""}
-                    onValueChange={(v) => setValues({ ...values, [field.key]: v })}
+            <>
+              {current.fields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label className="font-mono text-xs">{field.label}</Label>
+                  {field.type === "textarea" ? (
+                    <Textarea
+                      rows={4}
+                      value={values[field.key] ?? ""}
+                      placeholder={field.placeholder}
+                      onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+                    />
+                  ) : field.type === "select" ? (
+                    <Select
+                      value={values[field.key] ?? ""}
+                      onValueChange={(v) => setValues({ ...values, [field.key]: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {o}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      type={field.type}
+                      value={values[field.key] ?? ""}
+                      placeholder={field.placeholder}
+                      onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+                      className={field.type === "number" ? "tabular" : ""}
+                    />
+                  )}
+                </div>
+              ))}
+
+              {step === STEPS.length - 1 && (values.target === "NinjaTrader 8" || !values.target) && (
+                <div className="mt-6 rounded-lg border border-primary/40 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+                    <FileCode className="size-4 text-primary" /> Generador NinjaScript 8 (C#)
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Tu código C# se compilará con tus parámetros (Stop: {values.stopLoss ?? 20} ticks, Target: {values.takeProfit ?? 40} ticks, Contratos: {values.contracts ?? 1}).
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={openExport}
+                    className="mt-3 gap-2"
+                    variant="default"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options.map((o) => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    type={field.type}
-                    value={values[field.key] ?? ""}
-                    placeholder={field.placeholder}
-                    onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-                    className={field.type === "number" ? "tabular" : ""}
-                  />
-                )}
-              </div>
-            ))
+                    <Download className="size-4" /> Ver y Descargar archivo .cs
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
+
+      <NinjaTraderExportDialog target={exportTarget} onClose={() => setExportTarget(null)} />
 
       <div className="flex justify-between">
         <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>

@@ -5,6 +5,7 @@ import {
   BrainCircuit,
   CircleDot,
   Cpu,
+  Download,
   Gauge,
   Sparkles,
   Target,
@@ -26,6 +27,10 @@ import {
   GENERATION_STEPS,
   type GeneratedStrategy,
 } from "@/lib/strategy-types";
+import {
+  NinjaTraderExportDialog,
+  type NinjaTraderExportTarget,
+} from "@/components/NinjaTraderExportDialog";
 
 const RULE_LABEL: Record<string, string> = {
   entry: "ENTRADA",
@@ -42,6 +47,7 @@ export function AIStrategyGenerator() {
   const [phase, setPhase] = useState<"idle" | "thinking" | "done">("idle");
   const [stepIndex, setStepIndex] = useState(0);
   const [result, setResult] = useState<GeneratedStrategy | null>(null);
+  const [exportTarget, setExportTarget] = useState<NinjaTraderExportTarget>(null);
   const timers = useRef<number[]>([]);
 
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
@@ -132,12 +138,15 @@ export function AIStrategyGenerator() {
       {phase === "done" && result && (
         <StrategyOutput
           strategy={result}
+          onExport={(strat) => setExportTarget({ type: "strategy", strategy: strat })}
           onBacktest={() => {
             setActiveStrategy(result);
             navigate({ to: "/backtest-engine" });
           }}
         />
       )}
+
+      <NinjaTraderExportDialog target={exportTarget} onClose={() => setExportTarget(null)} />
 
       {strategies.length > 0 && (
         <section>
@@ -229,9 +238,11 @@ function ThinkingState({ stepIndex }: { stepIndex: number }) {
 function StrategyOutput({
   strategy,
   onBacktest,
+  onExport,
 }: {
   strategy: GeneratedStrategy;
   onBacktest: () => void;
+  onExport: (strategy: GeneratedStrategy) => void;
 }) {
   const logic = strategy.generated_logic;
   return (
@@ -246,9 +257,18 @@ function StrategyOutput({
             {logic.instrument} · {logic.timeframe} · {logic.style} · {strategy.ai_model_used}
           </p>
         </div>
-        <Button onClick={onBacktest}>
-          Llevar a Backtest <ArrowRight className="size-4" />
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onExport(strategy)}
+            className="border-primary/40 hover:bg-primary/10"
+          >
+            <Download className="mr-1.5 size-4 text-primary" /> Exportar NinjaTrader (.cs)
+          </Button>
+          <Button onClick={onBacktest}>
+            Llevar a Backtest <ArrowRight className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

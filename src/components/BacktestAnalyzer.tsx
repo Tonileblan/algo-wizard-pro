@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Dices, Loader2, Lock, Play, Radar, Sigma } from "lucide-react";
+import { Dices, Download, Loader2, Lock, Play, Radar, Sigma } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -38,6 +38,10 @@ import {
 } from "@/components/ui/hover-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpsellDialog, type UpsellState } from "@/components/UpsellDialog";
+import {
+  NinjaTraderExportDialog,
+  type NinjaTraderExportTarget,
+} from "@/components/NinjaTraderExportDialog";
 import { useAppState } from "@/hooks/use-app-state";
 import { INSTRUMENTS } from "@/lib/market-symbols";
 import { paramsFromStrategy } from "@/lib/strategy-types";
@@ -80,6 +84,7 @@ export function BacktestAnalyzer() {
     latencyMs: 45,
   });
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [exportTarget, setExportTarget] = useState<NinjaTraderExportTarget>(null);
 
   const strategyParams = useMemo(() => paramsFromStrategy(activeStrategy), [activeStrategy]);
 
@@ -118,9 +123,41 @@ export function BacktestAnalyzer() {
     else setUpsell({ feature, requiredTier: "elite" });
   }
 
+  function handleExportNinjaTrader() {
+    if (!can("pro")) {
+      setUpsell({ feature: "la exportación a NinjaTrader 8", requiredTier: "pro" });
+      return;
+    }
+
+    if (activeStrategy) {
+      setExportTarget({
+        type: "strategy",
+        strategy: activeStrategy,
+      });
+      return;
+    }
+
+    const currentInst = INSTRUMENTS.find((i) => i.id === dataset);
+    setExportTarget({
+      type: "custom",
+      options: {
+        strategyName: `BacktestStrategy_${currentInst?.symbol ?? "NQ"}`,
+        instrument: currentInst?.label ?? "Nasdaq 100",
+        timeframe: "5 min",
+        style: strategyParams.style ?? "Mean Reversion",
+        rsiPeriod: strategyParams.rsiPeriod ?? 14,
+        stopTicks: strategyParams.stopTicks ?? 20,
+        takeTicks: strategyParams.takeTicks ?? 40,
+        contracts: strategyParams.contracts ?? 1,
+        atrMultiplier: strategyParams.atrMultiplier ?? 1.5,
+      },
+    });
+  }
+
   return (
     <div className="space-y-6">
       <UpsellDialog state={upsell} onClose={() => setUpsell(null)} />
+      <NinjaTraderExportDialog target={exportTarget} onClose={() => setExportTarget(null)} />
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -166,6 +203,13 @@ export function BacktestAnalyzer() {
           >
             {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
             Re-ejecutar
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportNinjaTrader}
+            className="border-primary/40 hover:bg-primary/10 gap-1.5"
+          >
+            <Download className="size-4 text-primary" /> Exportar NinjaTrader (.cs)
           </Button>
         </div>
       </header>
