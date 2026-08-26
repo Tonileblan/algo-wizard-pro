@@ -7,105 +7,128 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { getPlan, hasAccess, type Plan, type PlanTier } from "@/lib/plans";
-import type { GeneratedStrategy } from "@/lib/mock-ai";
+import { getAccount, setPlanTier as setPlanTierFn, type AccountSnapshot } from "@/lib/account.functions";
+import type { GeneratedStrategy } from "@/lib/strategy-types";
 
-export type Subscription = {
-  id: string;
-  user_id: string;
-  stripe_customer_id: string;
-  stripe_subscription_id: string | null;
-  plan_tier: PlanTier;
-  status: "active" | "canceled" | "past_due";
-  current_period_end: string;
-};
+export type Subscription = AccountSnapshot["subscription"];
 
 type AppState = {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  email: string | null;
+  displayName: string | null;
   subscription: Subscription;
   plan: Plan;
   can: (required: PlanTier) => boolean;
   aiGenerationsUsed: number;
   strategies: GeneratedStrategy[];
   activeStrategy: GeneratedStrategy | null;
-  setPlanTier: (tier: PlanTier) => void;
-  registerStrategy: (strategy: GeneratedStrategy) => void;
+  setPlanTier: (tier: PlanTier) => Promise<void>;
+  refresh: () => Promise<void>;
   setActiveStrategy: (strategy: GeneratedStrategy | null) => void;
+  signOut: () => Promise<void>;
 };
-
-const STORAGE_KEY = "quantforge.state.v1";
 
 const AppStateContext = createContext<AppState | null>(null);
 
-function defaultSubscription(): Subscription {
-  const end = new Date();
-  end.setDate(end.getDate() + 30);
+function anonymousSubscription(): Subscription {
   return {
-    id: "sub_local_0001",
-    user_id: "usr_demo_0001",
-    stripe_customer_id: "cus_mock_8sK21",
-    stripe_subscription_id: null,
+    id: "",
     plan_tier: "free",
     status: "active",
-    current_period_end: end.toISOString(),
+    stripe_customer_id: null,
+    stripe_subscription_id: null,
+    current_period_end: new Date().toISOString(),
+    ai_generations_used: 0,
   };
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [subscription, setSubscription] = useState<Subscription>(defaultSubscription);
-  const [strategies, setStrategies] = useState<GeneratedStrategy[]>([]);
+  const queryClient = useQueryClient();
+  const fetchAccount = useServerFn(getAccount);
+  const updatePlan = useServerFn(setPlanTierFn);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState<GeneratedStrategy | null>(null);
 
-  // Read persisted demo state after hydration to avoid SSR mismatches.
+  // Session lives in localStorage, so resolve it after hydration only.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        subscription?: Subscription;
-        strategies?: GeneratedStrategy[];
-      };
-      if (parsed.subscription) setSubscription(parsed.subscription);
-      if (parsed.strategies) setStrategies(parsed.strategies);
-    } catch {
-      /* ignore corrupted demo state */
-    }
+    let mounted = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSessionUserId(data.session?.user.id ?? null);
+      setSessionReady(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      setSessionUserId(session?.user.id ?? null);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ subscription, strategies }));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [subscription, strategies]);
+  const accountQuery = useQuery({
+    queryKey: ["account", sessionUserId],
+    queryFn: () => fetchAccount(),
+    enabled: Boolean(sessionUserId),
+    staleTime: 30_000,
+  });
 
-  const setPlanTier = useCallback((tier: PlanTier) => {
-    setSubscription((prev) => ({
-      ...prev,
-      plan_tier: tier,
-      status: "active",
-      stripe_subscription_id: tier === "free" ? null : `sub_mock_${tier}_92Kd`,
-    }));
-  }, []);
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["account"] });
+  }, [queryClient]);
 
-  const registerStrategy = useCallback((strategy: GeneratedStrategy) => {
-    setStrategies((prev) => [strategy, ...prev].slice(0, 20));
-  }, []);
+  const setPlanTier = useCallback(
+    async (tier: PlanTier) => {
+      await updatePlan({ data: { tier } });
+      await refresh();
+    },
+    [updatePlan, refresh],
+  );
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    queryClient.clear();
+    setActiveStrategy(null);
+  }, [queryClient]);
+
+  const account = accountQuery.data;
 
   const value = useMemo<AppState>(() => {
+    const subscription = account?.subscription ?? anonymousSubscription();
     const plan = getPlan(subscription.plan_tier);
     return {
+      isAuthenticated: Boolean(sessionUserId),
+      isLoading: !sessionReady || (Boolean(sessionUserId) && accountQuery.isPending),
+      email: account?.email ?? null,
+      displayName: account?.displayName ?? null,
       subscription,
       plan,
       can: (required: PlanTier) => hasAccess(subscription.plan_tier, required),
-      aiGenerationsUsed: strategies.length,
-      strategies,
+      aiGenerationsUsed: subscription.ai_generations_used,
+      strategies: account?.strategies ?? [],
       activeStrategy,
       setPlanTier,
-      registerStrategy,
+      refresh,
       setActiveStrategy,
+      signOut,
     };
-  }, [subscription, strategies, activeStrategy, setPlanTier, registerStrategy]);
+  }, [
+    account,
+    sessionUserId,
+    sessionReady,
+    accountQuery.isPending,
+    activeStrategy,
+    setPlanTier,
+    refresh,
+    signOut,
+  ]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }
