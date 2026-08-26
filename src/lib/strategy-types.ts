@@ -1,3 +1,5 @@
+import type { StrategyParams } from "./backtest-types";
+
 export type StrategyParameter = {
   name: string;
   value: string | number;
@@ -43,7 +45,9 @@ export const EXAMPLE_PROMPTS = [
 ];
 
 /** Maps the AI parameter list to the engine's typed parameters. */
-export function paramsFromStrategy(strategy: GeneratedStrategy | null) {
+export function paramsFromStrategy(
+  strategy: GeneratedStrategy | null,
+): Partial<StrategyParams> {
   const logic = strategy?.generated_logic;
   if (!logic) return {};
   const byName = new Map(logic.parameters.map((p) => [p.name, p.value] as const));
