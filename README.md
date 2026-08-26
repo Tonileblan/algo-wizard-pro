@@ -1,4 +1,4 @@
-# Algo Alpha
+# Quantitrading
 
 🧾 PRD TÉCNICO V3 PARA LOVABLE: ALGO-TRADING SAAS & AI ENGINE
 

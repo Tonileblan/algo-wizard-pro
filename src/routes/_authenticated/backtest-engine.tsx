@@ -6,13 +6,13 @@ import { PlanGate } from "@/components/PlanGate";
 export const Route = createFileRoute("/_authenticated/backtest-engine")({
   head: () => ({
     meta: [
-      { title: "Backtest Engine — QuantForge" },
+      { title: "Backtest Engine — Quantitrading" },
       {
         name: "description",
         content:
           "Análisis profundo de backtesting: curva de capital, drawdown relativo, matriz de optimización y log completo de operaciones.",
       },
-      { property: "og:title", content: "Backtest Engine — QuantForge" },
+      { property: "og:title", content: "Backtest Engine — Quantitrading" },
       {
         property: "og:description",
         content: "Equity, drawdown, heatmap de parámetros y modelo de fricción en un solo panel.",

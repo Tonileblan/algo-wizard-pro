@@ -13,13 +13,13 @@ import { LineChart, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Acceder a QuantForge — cuenta quant" },
+      { title: "Acceder a Quantitrading — cuenta quant" },
       {
         name: "description",
         content:
-          "Entra o crea tu cuenta de QuantForge para generar estrategias con IA y hacer backtesting con datos de mercado reales.",
+          "Entra o crea tu cuenta de Quantitrading para generar estrategias con IA y hacer backtesting con datos de mercado reales.",
       },
-      { property: "og:title", content: "Acceder a QuantForge" },
+      { property: "og:title", content: "Acceder a Quantitrading" },
       {
         property: "og:description",
         content: "Inicia sesión para acceder al AI Strategy Studio y al motor de backtesting.",
@@ -87,7 +87,7 @@ function AuthPage() {
   async function signInWithGoogle() {
     setLoading("google");
     try {
-      window.sessionStorage.setItem("quantforge.redirect", redirectTo);
+      window.sessionStorage.setItem("quantitrading.redirect", redirectTo);
     } catch {
       /* storage unavailable */
     }
@@ -108,7 +108,7 @@ function AuthPage() {
       <div className="w-full max-w-md">
         <Link to="/" className="mb-8 flex items-center justify-center gap-2 text-foreground">
           <LineChart className="size-6 text-primary" />
-          <span className="font-semibold tracking-tight">QuantForge</span>
+          <span className="font-semibold tracking-tight">Quantitrading</span>
         </Link>
         <Card>
           <CardHeader>

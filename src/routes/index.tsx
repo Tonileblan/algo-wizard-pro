@@ -7,13 +7,13 @@ import { AppShell } from "@/components/AppShell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "QuantForge — Prompt-to-Algorithm para traders sistemáticos" },
+      { title: "Quantitrading — Prompt-to-Algorithm para traders sistemáticos" },
       {
         name: "description",
         content:
           "Convierte una idea en lenguaje natural en una estrategia algorítmica validada: IA generativa, backtesting a nivel de tick y matrix optimization.",
       },
-      { property: "og:title", content: "QuantForge — Prompt-to-Algorithm" },
+      { property: "og:title", content: "Quantitrading — Prompt-to-Algorithm" },
       {
         property: "og:description",
         content:
@@ -60,7 +60,7 @@ function Landing() {
             De una frase a un algoritmo <span className="text-primary">validado</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-muted-foreground">
-            QuantForge convierte tu hipótesis de mercado en lógica cuantitativa estructurada, la
+            Quantitrading convierte tu hipótesis de mercado en lógica cuantitativa estructurada, la
             somete a un backtest con fricción real y te muestra dónde vive el edge.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

@@ -79,13 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "QuantForge — Algo-trading & AI strategy engine" },
+      { title: "Quantitrading — Algo-trading & AI strategy engine" },
       {
         name: "description",
         content:
           "Genera, valida y optimiza estrategias de trading algorítmico con IA, backtesting a nivel de tick y optimización de parámetros.",
       },
-      { property: "og:title", content: "QuantForge — Algo-trading & AI strategy engine" },
+      { property: "og:title", content: "Quantitrading — Algo-trading & AI strategy engine" },
       {
         property: "og:description",
         content:

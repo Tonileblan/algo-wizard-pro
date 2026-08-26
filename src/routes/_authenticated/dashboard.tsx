@@ -13,13 +13,13 @@ import { LiveMarketPanel } from "@/components/LiveMarketPanel";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — cuenta y límites de uso | QuantForge" },
+      { title: "Dashboard — cuenta y límites de uso | Quantitrading" },
       {
         name: "description",
         content:
           "Resumen de tu suscripción, límites de uso del plan y accesos rápidos al AI Studio, el builder manual y el motor de backtesting.",
       },
-      { property: "og:title", content: "Dashboard — QuantForge" },
+      { property: "og:title", content: "Dashboard — Quantitrading" },
       {
         property: "og:description",
         content: "Estado de suscripción, consumo de generaciones de IA y accesos al motor quant.",

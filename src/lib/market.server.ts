@@ -37,7 +37,7 @@ async function fetchYahooChart(symbol: string, interval: string, range: string) 
     `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
     `?interval=${interval}&range=${range}&includePrePost=false`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; QuantForge/1.0)", Accept: "application/json" },
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; Quantitrading/1.0)", Accept: "application/json" },
   });
   if (!res.ok) {
     throw new Error(`Yahoo Finance respondió ${res.status} para ${symbol}: ${await res.text()}`);

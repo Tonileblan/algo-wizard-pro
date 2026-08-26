@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-6 px-4">
           <Link to="/" className="flex items-center gap-2">
             <Activity className="size-5 text-primary" />
-            <span className="font-mono text-sm font-bold tracking-tight">QUANTFORGE</span>
+            <span className="font-mono text-sm font-bold tracking-tight">QUANTITRADING</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map(({ to, label, icon: Icon }) => (
@@ -74,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-[1600px] px-4 py-8">{children}</main>
       <footer className="border-t border-border px-4 py-6">
         <p className="mx-auto max-w-[1600px] font-mono text-[11px] text-muted-foreground">
-          QuantForge · entorno de demostración · datos simulados, sin ejecución real de órdenes.
+          Quantitrading · entorno de demostración · datos simulados, sin ejecución real de órdenes.
         </p>
       </footer>
     </div>
