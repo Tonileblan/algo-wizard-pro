@@ -45,6 +45,9 @@ function createSupabaseClient() {
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    db: {
+      schema: 'mia_iatrading',
+    },
     global: {
       fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
     },
